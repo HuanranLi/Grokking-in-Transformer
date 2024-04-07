@@ -3,6 +3,10 @@ from argparse import ArgumentParser
 from data import ALL_OPERATIONS
 from training import main
 
+
+import os
+import wandb
+
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--operation", type=str, choices=ALL_OPERATIONS.keys(), default="x/y")
@@ -17,5 +21,14 @@ if __name__ == "__main__":
     parser.add_argument("--num_steps", type=int, default=1e5)
     parser.add_argument("--device", type=str, default="cpu")
     args = parser.parse_args()
+
+    # Get the current working directory
+    current_path = os.getcwd()
+
+    # Set WANDB_DIR environment variable
+    os.environ['WANDB_DIR'] = current_path
+
+    # Optionally, print the path to verify
+    print("Setting WANDB_DIR to:", current_path)
 
     main(args)
