@@ -5,9 +5,12 @@ import wandb
 
 from data import get_data
 from model import Transformer
+import os
 
 def main(args: dict):
-    wandb.init(project="grokking", config=args)
+    current_path = os.getcwd()
+    print('Current Path', current_path)
+    wandb.init(project="grokking", config=args, dir = current_path)
     config = wandb.config
     device = torch.device(config.device)
 
@@ -66,12 +69,12 @@ def train(model, train_loader, optimizer, scheduler, device, num_steps):
 
         # Zero gradient buffers
         optimizer.zero_grad()
-        
+
         # Forward pass
         output = model(inputs)[-1,:,:]
         loss = criterion(output, labels)
         acc = (torch.argmax(output, dim=1) == labels).sum() / len(labels)
-        
+
         # Backward pass
         loss.backward()
 
@@ -100,19 +103,19 @@ def evaluate(model, val_loader, device, epoch):
 
     # Loop over each batch from the validation set
     for batch in val_loader:
-        
+
         # Copy data to device if needed
         batch = tuple(t.to(device) for t in batch)
 
         # Unpack the batch from the loader
         inputs, labels = batch
-        
+
         # Forward pass
         with torch.no_grad():
             output = model(inputs)[-1,:,:]
             correct += (torch.argmax(output, dim=1) == labels).sum()
             loss += criterion(output, labels) * len(labels)
-    
+
     acc = correct / len(val_loader.dataset)
     loss = loss / len(val_loader.dataset)
 

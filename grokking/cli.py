@@ -22,13 +22,4 @@ if __name__ == "__main__":
     parser.add_argument("--device", type=str, default="cpu")
     args = parser.parse_args()
 
-    # Get the current working directory
-    current_path = os.getcwd()
-
-    # Set WANDB_DIR environment variable
-    os.environ['WANDB_DIR'] = current_path
-
-    # Optionally, print the path to verify
-    print("Setting WANDB_DIR to:", current_path)
-
     main(args)
