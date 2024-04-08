@@ -20,6 +20,8 @@ if __name__ == "__main__":
     parser.add_argument("--weight_decay", type=float, default=1)
     parser.add_argument("--num_steps", type=int, default=1e5)
     parser.add_argument("--device", type=str, default="cpu")
+    parser.add_argument("--wandb_api_key", type=str)
+
     args = parser.parse_args()
 
     main(args)
