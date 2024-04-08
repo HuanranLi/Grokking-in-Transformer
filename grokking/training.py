@@ -9,6 +9,9 @@ import os
 
 def main(args: dict):
     current_path = os.getcwd()
+    os.environ["WANDB_DIR"] = current_path
+    os.environ["WANDB_CACHE_DIR"] = os.path.join(current_path, '.cache/wandb')
+    os.environ["WANDB_CONFIG_DIR"] = os.path.join(current_path, '.config/wandb')
     print('Current Path', current_path)
     wandb.init(project="grokking", config=args, dir = current_path)
     config = wandb.config
