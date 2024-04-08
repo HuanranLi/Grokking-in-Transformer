@@ -13,7 +13,6 @@ def main(args: dict):
     os.environ["WANDB_CACHE_DIR"] = os.path.join(current_path, '.cache/wandb')
     os.environ["WANDB_CONFIG_DIR"] = os.path.join(current_path, '.config/wandb')
     print('Current Path', current_path)
-
     wandb.login(key=args.wandb_api_key)
     wandb.init(project="grokking", config=args, dir = current_path)
     config = wandb.config
