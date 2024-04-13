@@ -41,6 +41,10 @@ def main(args: dict):
         num_tokens=config.prime + 2,
         seq_len=5
         ).to(device)
+
+    for param in model.parameters():
+        param.data *= config.scale_factor
+
     optimizer = torch.optim.AdamW(
         model.parameters(),
         lr=config.learning_rate,
