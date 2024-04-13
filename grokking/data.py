@@ -1,6 +1,7 @@
 from math import ceil
 import torch
 
+
 DIVISION_MODULO_OPERATIONS = {
     "x/y": lambda x, y, p: (x*y % p, y, x),
 }
@@ -33,8 +34,30 @@ def operation_mod_p_data(operation: str, p: int, eq_token: int, op_token: int):
 
     return inputs, labels
 
+def operation_mod_p_data_noisy(operation: str, p: int, eq_token: int, op_token: int, noise_level: float, noise_cols):
+    """
+    x◦y (mod p) for 0 <= x < p, 1 <= y < p if operation in DIVISION_MODULO_OPERATIONS
+    x◦y (mod p) for 0 <= x, y < p otherwise
+    """
+    x = torch.arange(0, p)
+    y = torch.arange(0 if not operation in DIVISION_MODULO_OPERATIONS else 1, p)
+    x, y = torch.cartesian_prod(x, y).T
+
+    eq = torch.ones_like(x) * eq_token
+    op = torch.ones_like(x) * op_token
+
+    x, y, labels = ALL_OPERATIONS[operation](x, y, p)
+
+    inputs = torch.stack([x, op, y, eq], dim=1).float()
+
+    return inputs, labels
+
+
 def get_data(operation: str, prime: int, training_fraction: float, batch_size: int):
+
+
     inputs, labels = operation_mod_p_data(operation, prime, prime, prime+1)
+    # inputs, labels = operation_mod_p_data_noisy(operation, prime, prime, prime+1, noise_level = noise_level, noise_cols = noise_cols)
     dataset = torch.utils.data.TensorDataset(inputs, labels)
 
     train_size = int(training_fraction * len(dataset))

@@ -32,7 +32,7 @@ def main(args: dict):
         config.operation,
         config.prime,
         config.training_fraction,
-        config.batch_size
+        config.batch_size,
         )
     model = Transformer(
         num_layers=config.num_layers,
@@ -54,10 +54,10 @@ def main(args: dict):
     num_epochs = ceil(config.num_steps / len(train_loader))
 
     for epoch in tqdm(range(num_epochs)):
-        train(model, train_loader, optimizer, scheduler, device, config.num_steps)
+        train(model, train_loader, optimizer, scheduler, device, config.num_steps, config.noise_level, config.noise_cols_mode)
         evaluate(model, val_loader, device, epoch)
 
-def train(model, train_loader, optimizer, scheduler, device, num_steps):
+def train(model, train_loader, optimizer, scheduler, device, num_steps, noise_level, noise_cols_mode):
     # Set model to training mode
     model.train()
     criterion = torch.nn.CrossEntropyLoss()
@@ -75,7 +75,7 @@ def train(model, train_loader, optimizer, scheduler, device, num_steps):
         optimizer.zero_grad()
 
         # Forward pass
-        output = model(inputs)[-1,:,:]
+        output = model(inputs, noise_level, noise_cols_mode)[-1,:,:]
         loss = criterion(output, labels)
         acc = (torch.argmax(output, dim=1) == labels).sum() / len(labels)
 
