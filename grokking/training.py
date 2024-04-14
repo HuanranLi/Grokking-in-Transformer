@@ -7,6 +7,14 @@ from data import get_data
 from model import Transformer
 import os
 
+
+def define_gradient_norm_metrics(model):
+    for name, _ in model.named_parameters():
+        # Create a hierarchical name for the metric
+        metric_name = f"grad_norm/{name.replace('.', '/')}"
+        wandb.define_metric(metric_name, step_metric="step")
+
+
 def main(args: dict):
     current_path = os.getcwd()
     os.environ["WANDB_DIR"] = current_path
@@ -28,6 +36,7 @@ def main(args: dict):
     wandb.define_metric("validation/accuracy", step_metric='epoch')
     wandb.define_metric("validation/loss", step_metric='epoch')
 
+
     train_loader, val_loader = get_data(
         config.operation,
         config.prime,
@@ -42,6 +51,8 @@ def main(args: dict):
         seq_len=5
         ).to(device)
 
+    define_gradient_norm_metrics(model)
+    
     for param in model.parameters():
         param.data *= config.scale_factor
 
@@ -86,6 +97,15 @@ def train(model, train_loader, optimizer, scheduler, device, num_steps, noise_le
         # Backward pass
         loss.backward()
 
+        # Collect and log gradient norms
+        gradient_norms = {}
+        for name, parameter in model.named_parameters():
+            if parameter.grad is not None:
+                grad_norm = parameter.grad.norm(2).item()
+                gradient_norm_name = f"grad_norm/{name.replace('.', '/')}"
+                gradient_norms[gradient_norm_name] = grad_norm
+
+
         # Update weights
         optimizer.step()
         scheduler.step()
@@ -93,7 +113,8 @@ def train(model, train_loader, optimizer, scheduler, device, num_steps, noise_le
         metrics = {
             "training/accuracy": acc,
             "training/loss": loss,
-            "step": wandb.run.step
+            "step": wandb.run.step,
+            **gradient_norms
         }
         wandb.log(metrics)
 
