@@ -52,7 +52,7 @@ def main(args: dict):
         ).to(device)
 
     define_gradient_norm_metrics(model)
-    
+
     for param in model.parameters():
         param.data *= config.scale_factor
 
@@ -68,18 +68,87 @@ def main(args: dict):
 
     num_epochs = ceil(config.num_steps / len(train_loader))
 
+
+    first_95_train = None
+    first_95_eval = None
+
     for epoch in tqdm(range(num_epochs)):
-        train(model, train_loader, optimizer, scheduler, device, config.num_steps, config.noise_level, config.noise_cols_mode)
-        evaluate(model, val_loader, device, epoch)
+        train_acc = train(model, train_loader, optimizer, scheduler, device, config.num_steps, config.noise_level, config.noise_cols_mode)
+        eval_acc = evaluate(model, val_loader, device, epoch)
+
+        # Check and log when training and evaluation accuracy first exceed 95%
+        if train_acc >= 0.95 and first_95_train is None:
+            first_95_train = epoch
+            wandb.log({"epoch_t_acc>95%": first_95_train})
+
+        if eval_acc >= 0.95 and first_95_eval is None:
+            first_95_eval = epoch
+            wandb.log({"epoch_v_acc>95%": first_95_eval})
+
+    wandb.log({"grokking delay": first_95_train - first_95_eval})
+
+
+
+# def train(model, train_loader, optimizer, scheduler, device, num_steps, noise_level, noise_cols_mode):
+#     # Set model to training mode
+#     model.train()
+#     criterion = torch.nn.CrossEntropyLoss()
+#
+#     # Loop over each batch from the training set
+#     for batch in train_loader:
+#
+#         # Copy data to device if needed
+#         batch = tuple(t.to(device) for t in batch)
+#
+#         # Unpack the batch from the loader
+#         inputs, labels = batch
+#
+#         # Zero gradient buffers
+#         optimizer.zero_grad()
+#
+#         # Forward pass
+#         output = model(inputs, noise_level, noise_cols_mode)[-1,:,:]
+#         loss = criterion(output, labels)
+#         acc = (torch.argmax(output, dim=1) == labels).sum() / len(labels)
+#
+#         # Backward pass
+#         loss.backward()
+#
+#         # Collect and log gradient norms
+#         gradient_norms = {}
+#         for name, parameter in model.named_parameters():
+#             if parameter.grad is not None:
+#                 grad_norm = parameter.grad.norm(2).item()
+#                 gradient_norm_name = f"grad_norm/{name.replace('.', '/')}"
+#                 gradient_norms[gradient_norm_name] = grad_norm
+#
+#
+#         # Update weights
+#         optimizer.step()
+#         scheduler.step()
+#
+#         metrics = {
+#             "training/accuracy": acc,
+#             "training/loss": loss,
+#             "step": wandb.run.step,
+#             **gradient_norms
+#         }
+#         wandb.log(metrics)
+#
+#         # Finish training at maximum gradient updates
+#         if wandb.run.step == num_steps:
+#             return
 
 def train(model, train_loader, optimizer, scheduler, device, num_steps, noise_level, noise_cols_mode):
     # Set model to training mode
     model.train()
     criterion = torch.nn.CrossEntropyLoss()
 
+    total_acc = 0.0
+    total_count = 0
+
     # Loop over each batch from the training set
     for batch in train_loader:
-
         # Copy data to device if needed
         batch = tuple(t.to(device) for t in batch)
 
@@ -92,7 +161,7 @@ def train(model, train_loader, optimizer, scheduler, device, num_steps, noise_le
         # Forward pass
         output = model(inputs, noise_level, noise_cols_mode)[-1,:,:]
         loss = criterion(output, labels)
-        acc = (torch.argmax(output, dim=1) == labels).sum() / len(labels)
+        acc = (torch.argmax(output, dim=1) == labels).float().sum().item()  # Get total correct predictions as Python scalar
 
         # Backward pass
         loss.backward()
@@ -110,17 +179,36 @@ def train(model, train_loader, optimizer, scheduler, device, num_steps, noise_le
         optimizer.step()
         scheduler.step()
 
+        # # Log metrics
+        # wandb.log({
+        #     "training/accuracy": acc / len(labels),
+        #     "training/loss": loss.item(),
+        #     "step": wandb.run.step
+        # })
+
         metrics = {
-            "training/accuracy": acc,
+            "training/accuracy": acc / len(labels),
             "training/loss": loss,
             "step": wandb.run.step,
             **gradient_norms
         }
         wandb.log(metrics)
 
+        # Accumulate total accuracy
+        total_acc += acc
+        total_count += labels.size(0)
+
         # Finish training at maximum gradient updates
-        if wandb.run.step == num_steps:
-            return
+        if wandb.run.step >= num_steps:
+            break
+
+    # Calculate overall training accuracy
+    overall_training_accuracy = total_acc / total_count
+    # print(f"Overall Training Accuracy: {overall_training_accuracy:.4f}")
+
+    return overall_training_accuracy
+
+# You should replace placeholders like wandb.run.step with actual control logic for step counting and termination if not using wandb.
 
 def evaluate(model, val_loader, device, epoch):
     # Set model to evaluation mode
@@ -154,3 +242,5 @@ def evaluate(model, val_loader, device, epoch):
         "epoch": epoch
     }
     wandb.log(metrics, commit=False)
+
+    return acc
