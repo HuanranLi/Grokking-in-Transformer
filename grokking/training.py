@@ -36,6 +36,10 @@ def main(args: dict):
     wandb.define_metric("validation/accuracy", step_metric='epoch')
     wandb.define_metric("validation/loss", step_metric='epoch')
 
+    wandb.define_metric("grokking/epoch_train>95%")
+    wandb.define_metric("grokking/epoch_val>95%")
+    wandb.define_metric("grokking/delay")
+
 
     train_loader, val_loader = get_data(
         config.operation,
@@ -73,19 +77,20 @@ def main(args: dict):
     first_95_eval = None
 
     for epoch in tqdm(range(num_epochs)):
-        train_acc = train(model, train_loader, optimizer, scheduler, device, config.num_steps, config.noise_level, config.noise_cols_mode)
+        train_acc = train(model, train_loader, optimizer, scheduler, device, config.num_steps, config.noise_level)
         eval_acc = evaluate(model, val_loader, device, epoch)
 
         # Check and log when training and evaluation accuracy first exceed 95%
         if train_acc >= 0.95 and first_95_train is None:
             first_95_train = epoch
-            wandb.log({"epoch_t_acc>95%": first_95_train})
+            wandb.log({"grokking/epoch_train>95%": first_95_train})
 
         if eval_acc >= 0.95 and first_95_eval is None:
             first_95_eval = epoch
-            wandb.log({"epoch_v_acc>95%": first_95_eval})
+            wandb.log({"grokking/epoch_val>95%": first_95_eval})
 
-    wandb.log({"grokking delay": first_95_train - first_95_eval})
+    if first_95_eval is not None and first_95_train is not None:
+        wandb.log({"grokking/delay": first_95_eval - first_95_train})
 
 
 
@@ -139,7 +144,7 @@ def main(args: dict):
 #         if wandb.run.step == num_steps:
 #             return
 
-def train(model, train_loader, optimizer, scheduler, device, num_steps, noise_level, noise_cols_mode):
+def train(model, train_loader, optimizer, scheduler, device, num_steps, noise_level):
     # Set model to training mode
     model.train()
     criterion = torch.nn.CrossEntropyLoss()
@@ -159,7 +164,7 @@ def train(model, train_loader, optimizer, scheduler, device, num_steps, noise_le
         optimizer.zero_grad()
 
         # Forward pass
-        output = model(inputs, noise_level, noise_cols_mode)[-1,:,:]
+        output = model(inputs, noise_level)[-1,:,:]
         loss = criterion(output, labels)
         acc = (torch.argmax(output, dim=1) == labels).float().sum().item()  # Get total correct predictions as Python scalar
 

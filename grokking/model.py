@@ -49,7 +49,6 @@ class Transformer(torch.nn.Module):
         nn.Linear(dim_model, num_tokens)
     )
 
-    self.noise_cols_comb = generate_all_combinations(4)
 
 
   def forward(self, inputs: Tensor, noise_level = 0, noise_cols_mode = 0):
@@ -65,10 +64,7 @@ class Transformer(torch.nn.Module):
     embedding = rearrange(embedding, 'b s d -> s b d')
 
     if noise_level > 0:
-        noise_cols = self.noise_cols_comb[noise_cols_mode]
-        # [S, B, D]
         noise = torch.randn_like(embedding) * noise_level
-
-        embedding[noise_cols] += noise[noise_cols]
+        embedding += noise
 
     return self.model(embedding)

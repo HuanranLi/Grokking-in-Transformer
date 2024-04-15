@@ -23,9 +23,6 @@ if __name__ == "__main__":
 
     parser.add_argument('--noise_level', type=float, default=0.0,
                         help='Standard deviation of the Gaussian noise to be added to the dataset columns.')
-
-    parser.add_argument('--noise_cols_mode', type=int, default = 0, choices=range(16),
-                        help='Mode to select columns for noise addition.')
         # Adding arguments
     parser.add_argument('--scale_factor', type=float, default=1,
                         help='Scale factor to multiply the initial parameters of the model.')
