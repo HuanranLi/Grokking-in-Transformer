@@ -51,7 +51,7 @@ def main(args: dict):
         num_layers=config.num_layers,
         dim_model=config.dim_model,
         num_heads=config.num_heads,
-        num_tokens=config.prime + 2,
+        num_tokens=2 * config.prime + 2,
         seq_len=5
         ).to(device)
 

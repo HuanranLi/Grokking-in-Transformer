@@ -7,8 +7,8 @@ DIVISION_MODULO_OPERATIONS = {
 }
 
 ALL_MODULO_OPERATIONS = {
-    "x+y": lambda x, y, _: (x, y, x + y),
-    "x-y": lambda x, y, _: (x, y, x - y),
+    "x+y": lambda x, y, _: (x, y, x+y),
+    "x-y": lambda x, y, _: (x, y, x-y),
     **DIVISION_MODULO_OPERATIONS,
 }
 
@@ -62,6 +62,7 @@ def get_data(operation: str, prime: int, training_fraction: float, batch_size: i
 
     train_size = int(training_fraction * len(dataset))
     val_size = len(dataset) - train_size
+
 
     train_dataset, val_dataset = torch.utils.data.random_split(dataset, [train_size, val_size])
 
