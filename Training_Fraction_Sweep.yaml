@@ -1,31 +1,53 @@
-project: grokking
-program: grokking/cli.py
 method: grid
-
 metric:
-  name: validation_loss
   goal: minimize
-
+  name: validation_loss
 parameters:
-  operation:
-    value: "x/y"
-  training_fraction:
-    values: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
-  num_layers:
-    value: 2
-  dim_model:
-    value: 128
-  num_heads:
-    value: 4
-  prime:
-    value: 97
   batch_size:
-    value: 512
-  learning_rate:
-    value: 1e-3
-  weight_decay:
-    value: 1
-  num_steps:
-    value: 1e5
+    values:
+      - 1
+      - 8
+      - 32
+      - 128
+      - 512
+      - 1024
   device:
     value: cuda
+  dim_model:
+    value: 128
+  learning_rate:
+    value: 0.001
+  noise_level:
+    values:
+      - 0
+      - 0.1
+      - 1
+  num_heads:
+    value: 4
+  num_layers:
+    value: 2
+  num_steps:
+    value: 100000
+  operation:
+    value: x/y
+  prime:
+    values:
+      - 47
+      - 97
+      - 197
+      - 293
+      - 563
+      - 997
+  scale_factor:
+    values:
+      - 0.1
+      - 1
+      - 10
+  training_fraction:
+    value: 0.3
+  weight_decay:
+    values:
+      - 0.1
+      - 1
+program: grokking/cli.py
+project: grokking
