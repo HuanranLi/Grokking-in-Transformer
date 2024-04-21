@@ -15,6 +15,15 @@ def define_gradient_norm_metrics(model):
         wandb.define_metric(metric_name, step_metric="step")
 
 
+def save_checkpoint(model, optimizer, filename="final_model_checkpoint.pth"):
+    checkpoint = {
+        'model_state_dict': model.state_dict(),
+        'optimizer_state_dict': optimizer.state_dict()
+    }
+    torch.save(checkpoint, filename)
+    return filename
+
+
 def main(args: dict):
     current_path = os.getcwd()
     os.environ["WANDB_DIR"] = current_path
@@ -91,6 +100,10 @@ def main(args: dict):
 
     if first_95_eval is not None and first_95_train is not None:
         wandb.log({"grokking/delay": first_95_eval - first_95_train})
+
+    final_checkpoint_filename = save_checkpoint(model, optimizer)
+    wandb.save(final_checkpoint_filename)
+    wandb.finish()
 
 
 
