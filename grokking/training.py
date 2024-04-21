@@ -47,15 +47,24 @@ def main(args: dict):
 
     wandb.define_metric("grokking/epoch_train>95%")
     wandb.define_metric("grokking/epoch_val>95%")
-    wandb.define_metric("grokking/delay")
+    wandb.define_metric("grokking/epoch_delay")
 
 
-    train_loader, val_loader = get_data(
+    wandb.define_metric("grokking/step_train>95%")
+    wandb.define_metric("grokking/step_val>95%")
+    wandb.define_metric("grokking/step_delay")
+
+
+    train_loader, val_loader, train_size, val_size = get_data(
         config.operation,
         config.prime,
         config.training_fraction,
         config.batch_size,
         )
+
+    wandb.log({"data/train_size": train_size})
+    wandb.log({"data/val_size": val_size})
+
     model = Transformer(
         num_layers=config.num_layers,
         dim_model=config.dim_model,
@@ -93,13 +102,16 @@ def main(args: dict):
         if train_acc >= 0.95 and first_95_train is None:
             first_95_train = epoch
             wandb.log({"grokking/epoch_train>95%": first_95_train})
+            wandb.log({"grokking/step_train>95%": first_95_train * len(train_loader)})
 
         if eval_acc >= 0.95 and first_95_eval is None:
             first_95_eval = epoch
             wandb.log({"grokking/epoch_val>95%": first_95_eval})
+            wandb.log({"grokking/step_val>95%": first_95_eval * len(train_loader)})
 
     if first_95_eval is not None and first_95_train is not None:
-        wandb.log({"grokking/delay": first_95_eval - first_95_train})
+        wandb.log({"grokking/epoch_delay": first_95_eval - first_95_train})
+        wandb.log({"grokking/step_delay": (first_95_eval - first_95_train) * len(train_loader)})
 
     final_checkpoint_filename = save_checkpoint(model, optimizer)
     wandb.save(final_checkpoint_filename)

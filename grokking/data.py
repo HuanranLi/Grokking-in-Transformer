@@ -60,8 +60,10 @@ def get_data(operation: str, prime: int, training_fraction: float, batch_size: i
     # inputs, labels = operation_mod_p_data_noisy(operation, prime, prime, prime+1, noise_level = noise_level, noise_cols = noise_cols)
     dataset = torch.utils.data.TensorDataset(inputs, labels)
 
+    # WHY
     train_size = int(training_fraction * len(dataset))
     val_size = len(dataset) - train_size
+
 
 
     train_dataset, val_dataset = torch.utils.data.random_split(dataset, [train_size, val_size])
@@ -71,4 +73,4 @@ def get_data(operation: str, prime: int, training_fraction: float, batch_size: i
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
 
-    return train_loader, val_loader
+    return train_loader, val_loader, train_size, val_size
