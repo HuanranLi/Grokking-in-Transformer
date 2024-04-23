@@ -7,6 +7,7 @@ from data import get_data
 from model import Transformer
 import os
 
+import torch.nn.functional as F
 
 def define_gradient_norm_metrics(model):
     for name, _ in model.named_parameters():
@@ -42,8 +43,11 @@ def main(args: dict):
     # Define metrics
     wandb.define_metric("training/accuracy", step_metric='step')
     wandb.define_metric("training/loss", step_metric='step')
+    wandb.define_metric("training/real_mse", step_metric='step')
+
     wandb.define_metric("validation/accuracy", step_metric='epoch')
     wandb.define_metric("validation/loss", step_metric='epoch')
+    wandb.define_metric("validation/real_mse", step_metric='epoch')
 
     wandb.define_metric("grokking/epoch_train>95%")
     wandb.define_metric("grokking/epoch_val>95%")
@@ -119,56 +123,6 @@ def main(args: dict):
 
 
 
-# def train(model, train_loader, optimizer, scheduler, device, num_steps, noise_level, noise_cols_mode):
-#     # Set model to training mode
-#     model.train()
-#     criterion = torch.nn.CrossEntropyLoss()
-#
-#     # Loop over each batch from the training set
-#     for batch in train_loader:
-#
-#         # Copy data to device if needed
-#         batch = tuple(t.to(device) for t in batch)
-#
-#         # Unpack the batch from the loader
-#         inputs, labels = batch
-#
-#         # Zero gradient buffers
-#         optimizer.zero_grad()
-#
-#         # Forward pass
-#         output = model(inputs, noise_level, noise_cols_mode)[-1,:,:]
-#         loss = criterion(output, labels)
-#         acc = (torch.argmax(output, dim=1) == labels).sum() / len(labels)
-#
-#         # Backward pass
-#         loss.backward()
-#
-#         # Collect and log gradient norms
-#         gradient_norms = {}
-#         for name, parameter in model.named_parameters():
-#             if parameter.grad is not None:
-#                 grad_norm = parameter.grad.norm(2).item()
-#                 gradient_norm_name = f"grad_norm/{name.replace('.', '/')}"
-#                 gradient_norms[gradient_norm_name] = grad_norm
-#
-#
-#         # Update weights
-#         optimizer.step()
-#         scheduler.step()
-#
-#         metrics = {
-#             "training/accuracy": acc,
-#             "training/loss": loss,
-#             "step": wandb.run.step,
-#             **gradient_norms
-#         }
-#         wandb.log(metrics)
-#
-#         # Finish training at maximum gradient updates
-#         if wandb.run.step == num_steps:
-#             return
-
 def train(model, train_loader, optimizer, scheduler, device, num_steps, noise_level):
     # Set model to training mode
     model.train()
@@ -191,7 +145,9 @@ def train(model, train_loader, optimizer, scheduler, device, num_steps, noise_le
         # Forward pass
         output = model(inputs, noise_level)[-1,:,:]
         loss = criterion(output, labels)
-        acc = (torch.argmax(output, dim=1) == labels).float().sum().item()  # Get total correct predictions as Python scalar
+        predictions = torch.argmax(output, dim=1)
+        acc = (predictions == labels).float().sum().item()  # Get total correct predictions as Python scalar
+        mse = F.mse_loss(predictions.float(), labels.float()).item()
 
         # Backward pass
         loss.backward()
@@ -219,6 +175,7 @@ def train(model, train_loader, optimizer, scheduler, device, num_steps, noise_le
         metrics = {
             "training/accuracy": acc / len(labels),
             "training/loss": loss,
+            "training/real_mse": mse,
             "step": wandb.run.step,
             **gradient_norms
         }
@@ -247,6 +204,7 @@ def evaluate(model, val_loader, device, epoch):
 
     correct = 0
     loss = 0.
+    mse = 0.
 
     # Loop over each batch from the validation set
     for batch in val_loader:
@@ -260,15 +218,21 @@ def evaluate(model, val_loader, device, epoch):
         # Forward pass
         with torch.no_grad():
             output = model(inputs)[-1,:,:]
-            correct += (torch.argmax(output, dim=1) == labels).sum()
+
+            predictions = torch.argmax(output, dim=1)
+            correct += (predictions == labels).sum()
             loss += criterion(output, labels) * len(labels)
+
+            mse += F.mse_loss(predictions.float(), labels.float()).item()
 
     acc = correct / len(val_loader.dataset)
     loss = loss / len(val_loader.dataset)
+    mse = mse / len(val_loader.dataset)
 
     metrics = {
         "validation/accuracy": acc,
         "validation/loss": loss,
+        "validation/real_mse": mse,
         "epoch": epoch
     }
     wandb.log(metrics, commit=False)
