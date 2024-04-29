@@ -65,6 +65,7 @@ def download_wandb_run_files(run_path, file_names, base_dir='visualized_runs'):
     downloaded_files = {'run_dir': run_dir}
 
     for file_name in file_names:
+        downloaded_files[file_name] = None
         file_path = os.path.join(run_dir, file_name)
 
         # Check if file already exists
@@ -86,30 +87,47 @@ def download_wandb_run_files(run_path, file_names, base_dir='visualized_runs'):
     return downloaded_files
 
 
-def explore_gradient_directions(model, train_loader, test_loader, device, steps = 10, search_range = 1):
+def explore_gradient_directions(model, train_loader, test_loader, device, steps = 10, search_range = 1, init_model = None):
     model.to(device).eval()   # Set the model to evaluation mode to disable dropout, etc.
     original_state_dict = {name: param.clone() for name, param in model.named_parameters() if param.requires_grad}
 
-    # # Generate random gradient directions
-    # random_directions = {name: [torch.randn_like(param), torch.randn_like(param)]
-    #                      for name, param in model.named_parameters() if param.requires_grad}
-
     random_directions = {}
-    for name, param in model.named_parameters():
-        if param.requires_grad:
-            # Generate two random directions
-            random_dir1 = torch.randn_like(param)
-            random_dir2 = torch.randn_like(param)
+    if not init_model:
+        for name, param in model.named_parameters():
+            if param.requires_grad:
+                # Generate two random directions
+                random_dir1 = torch.randn_like(param)
+                random_dir2 = torch.randn_like(param)
 
-            # Normalize each direction by its norm
-            norm1 = torch.norm(random_dir1) + 1e-10
-            norm2 = torch.norm(random_dir2) + 1e-10
+                # Normalize each direction by its norm
+                norm1 = torch.norm(random_dir1) + 1e-10
+                norm2 = torch.norm(random_dir2) + 1e-10
 
-            random_dir1.div_(norm1)
-            random_dir2.div_(norm2)
+                random_dir1.div_(norm1)
+                random_dir2.div_(norm2)
 
-            # Store the normalized directions in the dictionary
-            random_directions[name] = [random_dir1, random_dir2]
+                # Store the normalized directions in the dictionary
+                random_directions[name] = [random_dir1, random_dir2]
+    else:
+        print('Detect Init model')
+        for (name, param), (init_name, init_param) in zip(model.named_parameters(), init_model.named_parameters()):
+            assert name == init_name
+
+            if param.requires_grad:
+                # Generate two random directions
+                random_dir1 = param - init_param
+                random_dir2 = torch.randn_like(param)
+
+                # Normalize each direction by its norm
+                norm1 = torch.norm(random_dir1) + 1e-10
+                norm2 = torch.norm(random_dir2) + 1e-10
+
+                random_dir1.div_(norm1)
+                random_dir2.div_(norm2)
+
+                # Store the normalized directions in the dictionary
+                random_directions[name] = [random_dir1, random_dir2]
+
 
     step_sizes = torch.linspace(-1 * search_range, 1 * search_range, steps=steps)  # Define step sizes, e.g., -1 to 1 in 10 steps
 
@@ -172,14 +190,21 @@ def main(args):
     wandb.init(project='grokking', id=run_id, resume="allow")
 
     run_path = args.run_path
-    files = download_wandb_run_files(run_path, ['config.yaml', 'final_model_checkpoint.pth'])
+    files = download_wandb_run_files(run_path, ['config.yaml', 'final_model_checkpoint.pth', 'first_model_checkpoint.pth'])
 
     device = torch.device(args.device)
     model, train_loader, val_loader, train_size, val_size = load_model_and_data(
         files['final_model_checkpoint.pth'], files['config.yaml'], device)
 
+    if files['first_model_checkpoint.pth']:
+        init_model, _, _, _, _ = load_model_and_data(
+            files['first_model_checkpoint.pth'], files['config.yaml'], device)
+    else:
+        init_model = None
+
+
     results = explore_gradient_directions(
-        model, train_loader, val_loader, device, steps=args.steps, search_range=args.search_range)
+        model, train_loader, val_loader, device, steps=args.steps, search_range=args.search_range, init_model = init_model)
 
     print(results)
 

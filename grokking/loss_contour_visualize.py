@@ -135,9 +135,18 @@ def download_wandb_run_files(run_path, file_names, base_dir='visualized_runs'):
 
 # Example usage:
 def main():
-    run_path = 'huanran-research/grokking/742kf75w'  # Replace with your actual run path
-    # run_path = "huanran-research/grokking/efnutu2l"
-    filename = 'results_steps_100_range_1.0.json'  # Filename you want to download
+    run_path = 'huanran-research/grokking/742kf75w'  #completed
+    # run_path = "huanran-research/grokking/efnutu2l" # need to run vis on range 100
+
+    run_path = 'huanran-research/grokking/37h0n7z5'# V2 calculating range 10
+    # run_path = 'huanran-research/grokking/8t31kk39'# V2 training
+
+    # filename = 'results_steps_100_range_1.0.json'
+    # filename = 'results_steps_100_range_100.0.json'
+    filename = 'results_steps_100_range_10.0.json'
+
+
+    # filename = 'results_steps_5_range_1.0.json'
 
     file_names_downloaded = download_wandb_run_files(run_path, [filename])
 
