@@ -87,7 +87,7 @@ def download_wandb_run_files(run_path, file_names, base_dir='visualized_runs'):
 
 
 def explore_gradient_directions(model, train_loader, test_loader, device, steps = 10, search_range = 1):
-    model.eval()  # Set the model to evaluation mode to disable dropout, etc.
+    model.to(device).eval()   # Set the model to evaluation mode to disable dropout, etc.
     original_state_dict = {name: param.clone() for name, param in model.named_parameters() if param.requires_grad}
 
     # # Generate random gradient directions
@@ -147,6 +147,7 @@ def compute_loss(model, data_loader, device):
     criterion = nn.CrossEntropyLoss()  # Adjust this based on your actual loss function
     total_loss = 0
     count = 0
+    model.to(device)
     for inputs, labels in data_loader:
         inputs, labels = inputs.to(device), labels.to(device)
         with torch.no_grad():
