@@ -139,7 +139,7 @@ def main():
     project_name = "grokking"
     filters = {
         "state": {"$eq": "finished"},  # Correct: Filters runs that have finished
-        "sweep": {"$eq": "574w2ypl"},  # Correct: Filters runs belonging to a specific sweep
+        "sweep": {"$eq": "cir87vhd"},  # Correct: Filters runs belonging to a specific sweep
     }
 
     max_runs = 1000
