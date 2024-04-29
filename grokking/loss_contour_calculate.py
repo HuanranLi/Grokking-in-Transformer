@@ -110,6 +110,7 @@ def explore_gradient_directions(model, train_loader, test_loader, device, steps 
                 random_directions[name] = [random_dir1, random_dir2]
     else:
         print('Detect Init model')
+        init_model.to(device).eval() 
         for (name, param), (init_name, init_param) in zip(model.named_parameters(), init_model.named_parameters()):
             assert name == init_name
 
