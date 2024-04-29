@@ -2,6 +2,8 @@ import wandb
 import json
 import ast
 from loss_contour_calculate import *
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 def load_results_from_file(filename):
     """Loads results from a JSON file and converts string keys back to tuple keys."""
