@@ -98,6 +98,9 @@ def main(args: dict):
     first_95_train = None
     first_95_eval = None
 
+    first_checkpoint_filename = save_checkpoint(model, optimizer, filename="first_model_checkpoint.pth")
+    wandb.save(first_checkpoint_filename)
+
     for epoch in tqdm(range(num_epochs)):
         train_acc = train(model, train_loader, optimizer, scheduler, device, config.num_steps, config.noise_level)
         eval_acc = evaluate(model, val_loader, device, epoch)
