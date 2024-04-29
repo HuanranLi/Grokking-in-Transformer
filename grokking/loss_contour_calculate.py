@@ -190,7 +190,12 @@ def main(args):
     wandb.init(project='grokking', id=run_id, resume="allow")
 
     run_path = args.run_path
-    files = download_wandb_run_files(run_path, ['config.yaml', 'final_model_checkpoint.pth', 'first_model_checkpoint.pth'])
+    if args.twin_model:
+        files = download_wandb_run_files(run_path, ['config.yaml', 'final_model_checkpoint.pth', 'first_model_checkpoint.pth'])
+    else:
+        files = download_wandb_run_files(run_path, ['config.yaml', 'final_model_checkpoint.pth'])
+        files['first_model_checkpoint.pth'] = None
+
 
     device = torch.device(args.device)
     model, train_loader, val_loader, train_size, val_size = load_model_and_data(
@@ -227,6 +232,10 @@ if __name__ == '__main__':
     parser.add_argument('--steps', type=int, default=5, help='Number of steps for gradient exploration')
     parser.add_argument('--search_range', type=float, default=1.0, help='Range of exploration around the gradient')
     parser.add_argument('--device', type=str, default='cpu', help='Device to run the model on (cpu or cuda)')
+
+
+    parser.add_argument('--twin_model', type=int, default=1, help='two models with one being the init model')
+
 
     args = parser.parse_args()
     main(args)

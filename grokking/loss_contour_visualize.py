@@ -135,7 +135,7 @@ def download_wandb_run_files(run_path, file_names, base_dir='visualized_runs'):
 
 # Example usage:
 def main():
-    run_path = 'huanran-research/grokking/742kf75w'  #completed
+    # run_path = 'huanran-research/grokking/742kf75w'  #completed
     # run_path = "huanran-research/grokking/efnutu2l" # need to run vis on range 100
 
     run_path = 'huanran-research/grokking/37h0n7z5'# V2 calculating range 10
