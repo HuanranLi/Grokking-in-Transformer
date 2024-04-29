@@ -208,7 +208,11 @@ def main(args):
 
     print(results)
 
-    results_filename = os.path.join(wandb.run.dir, f'results_steps_{args.steps}_range_{args.search_range}.json')
+    if init_model:
+        results_filename = os.path.join(wandb.run.dir, f'Twin_results_steps_{args.steps}_range_{args.search_range}.json')
+    else:
+        results_filename = os.path.join(wandb.run.dir, f'results_steps_{args.steps}_range_{args.search_range}.json')
+
     save_results_to_file(results, results_filename)
     wandb.save(results_filename)
 
