@@ -110,7 +110,7 @@ def explore_gradient_directions(model, train_loader, test_loader, device, steps 
                 random_directions[name] = [random_dir1, random_dir2]
     else:
         print('Detect Init model')
-        init_model.to(device).eval() 
+        init_model.to(device).eval()
         for (name, param), (init_name, init_param) in zip(model.named_parameters(), init_model.named_parameters()):
             assert name == init_name
 
@@ -233,8 +233,6 @@ if __name__ == '__main__':
     parser.add_argument('--steps', type=int, default=5, help='Number of steps for gradient exploration')
     parser.add_argument('--search_range', type=float, default=1.0, help='Range of exploration around the gradient')
     parser.add_argument('--device', type=str, default='cpu', help='Device to run the model on (cpu or cuda)')
-
-
     parser.add_argument('--twin_model', type=int, default=1, help='two models with one being the init model')
 
 

@@ -134,21 +134,7 @@ def download_wandb_run_files(run_path, file_names, base_dir='visualized_runs'):
     return downloaded_files
 
 # Example usage:
-def main():
-    # run_path = 'huanran-research/grokking/742kf75w'  #completed
-    # run_path = "huanran-research/grokking/efnutu2l" # completed
-
-    # run_path = 'huanran-research/grokking/37h0n7z5'# V2 calculating range 10-Twin
-    run_path = 'huanran-research/grokking/8t31kk39'# V2 calculating range 10
-
-    # filename = 'results_steps_100_range_1.0.json'
-    # filename = 'results_steps_100_range_100.0.json'
-    # filename = 'results_steps_100_range_10.0.json'
-    filename = 'Twin_results_steps_100_range_10.0.json'
-
-
-    # filename = 'results_steps_5_range_1.0.json'
-
+def main(run_path, filename):
     file_names_downloaded = download_wandb_run_files(run_path, [filename])
 
     results = load_results_from_file(file_names_downloaded[filename])
@@ -158,4 +144,20 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+
+    # run_path = 'huanran-research/grokking/742kf75w'  #completed
+    # run_path = "huanran-research/grokking/efnutu2l" # completed
+
+    # run_path = 'huanran-research/grokking/37h0n7z5'# V2
+    run_path = 'huanran-research/grokking/8t31kk39'# V2 grokking
+
+    # filename = 'results_steps_100_range_1.0.json'
+    # filename = 'results_steps_100_range_100.0.json'
+    # filename = 'results_steps_100_range_10.0.json'
+    # filename = 'Twin_results_steps_100_range_10.0.json'
+
+    filenames = ['results_steps_100_range_1.0.json', 'results_steps_100_range_100.0.json',  'results_steps_100_range_10.0.json']
+
+    for filename in filenames:
+        main(run_path, filename)
+        main(run_path, 'Twin_' + filename)
