@@ -113,6 +113,7 @@ def download_wandb_run_files(run_path, file_names, base_dir='visualized_runs'):
     downloaded_files = {'run_dir': run_dir}
 
     for file_name in file_names:
+        downloaded_files[file_name] = None
         file_path = os.path.join(run_dir, file_name)
 
         # Check if file already exists
@@ -137,11 +138,14 @@ def download_wandb_run_files(run_path, file_names, base_dir='visualized_runs'):
 def main(run_path, filename):
     file_names_downloaded = download_wandb_run_files(run_path, [filename])
 
-    results = load_results_from_file(file_names_downloaded[filename])
+    if file_names_downloaded[filename]:
+        results = load_results_from_file(file_names_downloaded[filename])
 
-    plot_loss_contours(results, os.path.join(file_names_downloaded['run_dir'], filename.split('.')[0]), title='Loss Contours')
-    plot_loss_3Dcontours(results, os.path.join(file_names_downloaded['run_dir'], filename.split('.')[0]), title='Loss Contours')
-
+        plot_loss_contours(results, os.path.join(file_names_downloaded['run_dir'], filename.split('.')[0]), title='Loss Contours')
+        plot_loss_3Dcontours(results, os.path.join(file_names_downloaded['run_dir'], filename.split('.')[0]), title='Loss Contours')
+    else:
+        print(f'File not found for {filename}')
+        
 
 if __name__ == "__main__":
 
