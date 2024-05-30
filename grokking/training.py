@@ -8,12 +8,18 @@ from model import Transformer
 import os
 
 import torch.nn.functional as F
+import random
+import numpy as np
+from torch.nn.functional import cosine_similarity
 
 def define_gradient_norm_metrics(model):
     for name, _ in model.named_parameters():
         # Create a hierarchical name for the metric
-        metric_name = f"grad_norm/{name.replace('.', '/')}"
-        wandb.define_metric(metric_name, step_metric="step")
+        wandb.define_metric(f"grad_norm/{name}", step_metric="step")
+        wandb.define_metric(f"weight_norm/{name}", step_metric="step")
+        wandb.define_metric(f"grad_changes_cossim/{name}", step_metric="step")
+        wandb.define_metric(f"grad_changes_norm/{name}", step_metric="step")
+
 
 
 def save_checkpoint(model, optimizer, filename="final_model_checkpoint.pth"):
@@ -26,6 +32,12 @@ def save_checkpoint(model, optimizer, filename="final_model_checkpoint.pth"):
 
 
 def main(args: dict):
+    torch.use_deterministic_algorithms(True)
+    torch.manual_seed(123)
+    random.seed(0)
+    np.random.seed(0)
+
+
     current_path = os.getcwd()
     os.environ["WANDB_DIR"] = current_path
     os.environ["WANDB_CACHE_DIR"] = os.path.join(current_path, '.cache/wandb')
@@ -98,8 +110,8 @@ def main(args: dict):
     first_95_train = None
     first_95_eval = None
 
-    first_checkpoint_filename = save_checkpoint(model, optimizer, filename="first_model_checkpoint.pth")
-    wandb.save(first_checkpoint_filename)
+    # first_checkpoint_filename = save_checkpoint(model, optimizer, filename="first_model_checkpoint.pth")
+    # wandb.save(first_checkpoint_filename)
 
     for epoch in tqdm(range(num_epochs)):
         train_acc = train(model, train_loader, optimizer, scheduler, device, config.num_steps, config.noise_level)
@@ -120,8 +132,8 @@ def main(args: dict):
         wandb.log({"grokking/epoch_delay": first_95_eval - first_95_train})
         wandb.log({"grokking/step_delay": (first_95_eval - first_95_train) * len(train_loader)})
 
-    final_checkpoint_filename = save_checkpoint(model, optimizer)
-    wandb.save(final_checkpoint_filename)
+    # final_checkpoint_filename = save_checkpoint(model, optimizer)
+    # wandb.save(final_checkpoint_filename)
     wandb.finish()
 
 
@@ -133,7 +145,7 @@ def train(model, train_loader, optimizer, scheduler, device, num_steps, noise_le
 
     total_acc = 0.0
     total_count = 0
-
+    old_gradients = None
     # Loop over each batch from the training set
     for batch in train_loader:
         # Copy data to device if needed
@@ -152,35 +164,54 @@ def train(model, train_loader, optimizer, scheduler, device, num_steps, noise_le
         acc = (predictions == labels).float().sum().item()  # Get total correct predictions as Python scalar
         mse = F.mse_loss(predictions.float(), labels.float()).item()
 
+        # Save a copy of the current gradients (initialized to zero before the forward pass)
+        if not old_gradients:
+            old_gradients = {name: param.grad.clone() if param.grad is not None else torch.zeros_like(param) for name, param in model.named_parameters()}
+        else:
+            old_gradients = new_gradients
+
         # Backward pass
         loss.backward()
 
+        # Calculate the new gradients after the backward pass
+        new_gradients = {name: param.grad.clone() if param.grad is not None else torch.zeros_like(param) for name, param in model.named_parameters()}
+
+        gradient_changes = {}
+        # Calculate cosine similarity and L2 difference between old and new gradients
+        for name in old_gradients.keys():
+            old_grad = old_gradients[name].view(-1)
+            new_grad = new_gradients[name].view(-1)
+
+            cos_sim = cosine_similarity(old_grad.unsqueeze(0), new_grad.unsqueeze(0)).item()
+            l2_diff = torch.norm(new_grad - old_grad, p=2).item()
+
+            gradient_changes[f"grad_changes_cossim/{name}"] = cos_sim
+            gradient_changes[f"grad_changes_norm/{name}"] = l2_diff
+
+
         # Collect and log gradient norms
         gradient_norms = {}
+        weight_norms = {}
         for name, parameter in model.named_parameters():
             if parameter.grad is not None:
-                grad_norm = parameter.grad.norm(2).item()
-                gradient_norm_name = f"grad_norm/{name.replace('.', '/')}"
-                gradient_norms[gradient_norm_name] = grad_norm
+                gradient_norms[f"grad_norm/{name}"] = parameter.grad.norm(2).item()
+
+                weight_norms[f"weight_norm/{name}"] = parameter.norm(2).item()
 
 
         # Update weights
         optimizer.step()
         scheduler.step()
 
-        # # Log metrics
-        # wandb.log({
-        #     "training/accuracy": acc / len(labels),
-        #     "training/loss": loss.item(),
-        #     "step": wandb.run.step
-        # })
 
         metrics = {
             "training/accuracy": acc / len(labels),
             "training/loss": loss,
             "training/real_mse": mse,
             "step": wandb.run.step,
-            **gradient_norms
+            **gradient_norms,
+            **weight_norms,
+            **gradient_changes
         }
         wandb.log(metrics)
 
@@ -194,7 +225,6 @@ def train(model, train_loader, optimizer, scheduler, device, num_steps, noise_le
 
     # Calculate overall training accuracy
     overall_training_accuracy = total_acc / total_count
-    # print(f"Overall Training Accuracy: {overall_training_accuracy:.4f}")
 
     return overall_training_accuracy
 
