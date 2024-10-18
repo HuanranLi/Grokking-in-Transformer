@@ -2,8 +2,6 @@
 
 An implementation of OpenAI's 'Grokking: Generalization Beyond Overfitting on Small Algorithmic Datasets' paper in PyTorch.
 
-![Grokking Overview](figures/Figure_1_left_accuracy.png)
-
 ## Installation
 
 * Clone the repository and navigate into the directory:
