@@ -51,10 +51,8 @@ We trained a **decoder-only transformer model** on arithmetic datasets, with ope
 
 Our experiments on transformers showed that the ratio of the training dataset size to batch size plays a crucial role in determining whether grokking occurs. We found a specific region, dubbed the **comprehension band**, where grokking delays are shorter. This band is associated with a training dataset to batch size ratio consistently in the range of 100–800.
 
-![Comprehension Band]()
-
 <p align="center">
-  <img src="figures/Grokking_Delay_BS_DataSize_epoch-1.png" alt="grokking" width="400" />
+  <img src="figures/Grokking_Delay_BS_DataSize_epoch-1.png" alt="Comprehension Band" width="400" />
 </p>
 
 ### WHY are Transformers Grokking?
