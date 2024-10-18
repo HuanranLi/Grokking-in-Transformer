@@ -62,6 +62,8 @@ The loss landscape for grokking versus non-grokking solutions shows notable diff
   <img src="visualized_runs/efnutu2l/Untitled.png" alt="Loss Landscape" width="300" />
 </p>
 
+### Full content is available in this *[poster](figures/ECE826_Poster.pdf)
+
 ## References
 
 Code:
