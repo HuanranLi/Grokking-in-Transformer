@@ -44,31 +44,31 @@ Grokking is defined as the scenario when a model continues to improve on the val
 
 We measure the **grokking delay** as the number of epochs between the points at which training and validation accuracy both reach 95%.
 
-![Grokking Delay](Figures/Grokking_Delay_BS_DataSize_epoch.pdf)
+![Grokking Delay](figures/Grokking_Delay_BS_DataSize_epoch.pdf)
 
 ### Grokking on Transformers (Arithmetic Data)
 
 We trained a **decoder-only transformer model** on arithmetic datasets, with operations like addition, subtraction, multiplication, and division modulo a prime number \( p \). The model architecture consists of two transformer layers with four heads. For optimization, we used the AdamW optimizer, with Cross Entropy loss and Weight Decay regularization.
 
-![Transformer Accuracy and Loss](Figures/accuracy_plot.pdf)
+![Transformer Accuracy and Loss](figures/accuracy_plot.pdf)
 
 ### Grokking on MLPs (MNIST)
 
 We replicated experiments using a **3-layer MLP** on the MNIST dataset, following prior work. The architecture used ReLU activations and trained with AdamH optimizer, using Mean-Square-Error (MSE) loss and Weight Decay regularization. We observed grokking even when using a small training set of 1,000 MNIST images.
 
-![MNIST Grokking](Figures/MNIST_Grokking.pdf)
+![MNIST Grokking](figures/MNIST_Grokking.pdf)
 
 ### WHEN are Transformers not Grokking?
 
 Our experiments on transformers showed that the ratio of the training dataset size to batch size plays a crucial role in determining whether grokking occurs. We found a specific region, dubbed the **comprehension band**, where grokking delays are shorter. This band is associated with a training dataset to batch size ratio consistently in the range of 100–800.
 
-![Comprehension Band](Figures/Grokking_Delay_BS_DataSize_epoch.pdf)
+![Comprehension Band](figures/Grokking_Delay_BS_DataSize_epoch.pdf)
 
 ### WHEN are MLPs not Grokking?
 
 For MLPs, we found that modifying the loss function or adding data augmentation (e.g., random rotation, Gaussian blur) could completely eliminate grokking delays. This suggests that certain training conditions can prevent grokking even in settings where it would otherwise occur.
 
-![MLP Augmentation Impact](Figures/MNIST_Grokking_Aug1.pdf)
+![MLP Augmentation Impact](figures/MNIST_Grokking_Aug1.pdf)
 
 ### WHY are Transformers Grokking?
 
