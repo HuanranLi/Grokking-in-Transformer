@@ -57,8 +57,10 @@ Our experiments on transformers showed that the ratio of the training dataset si
 
 The loss landscape for grokking versus non-grokking solutions shows notable differences. Grokking optima tend to have a much rougher loss landscape, with variations up to 8x larger. We also observed that the norm of attention weights spikes significantly during grokking, indicating an instability that aligns with validation improvements over time.
 
-![Loss Landscape](visualized_runs/742kf75w/Untitled.png)
-![Loss Landscape](visualized_runs/efnutu2l/Untitled.png)
+<p align="center">
+  <img src="visualized_runs/742kf75w/Untitled.png" alt="Loss Landscape" width="300" />
+  <img src="visualized_runs/efnutu2l/Untitled.png" alt="Loss Landscape" width="300" />
+</p>
 
 ## References
 
