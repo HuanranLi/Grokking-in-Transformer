@@ -1,2 +1,5 @@
 vis_*
 visualized_runs/*
+*
+!.gitignore
+!*.py

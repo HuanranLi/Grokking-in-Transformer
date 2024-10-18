@@ -61,12 +61,12 @@ def get_data(operation: str, prime: int, training_fraction: float, batch_size: i
     dataset = torch.utils.data.TensorDataset(inputs, labels)
 
     # WHY
-    train_size = int(training_fraction * len(dataset))
-    val_size = len(dataset) - train_size
 
+    val_size = int(len(dataset) * 0.2)
+    train_size = int( (len(dataset) - val_size) * training_fraction)
+    remain_size = len(dataset) - train_size - val_size
 
-
-    train_dataset, val_dataset = torch.utils.data.random_split(dataset, [train_size, val_size])
+    train_dataset, val_dataset, _ = torch.utils.data.random_split(dataset, [train_size, val_size, remain_size])
 
     batch_size = min(batch_size, ceil(len(dataset) / 2))
 
