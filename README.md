@@ -43,15 +43,19 @@ This project builds on recent research that explores the phenomenon of **Grokkin
 
 We trained a **decoder-only transformer model** on arithmetic datasets, with operations like addition, subtraction, multiplication, and division modulo a prime number \( p \). The model architecture consists of two transformer layers with four heads. For optimization, we used the AdamW optimizer, with Cross Entropy loss and Weight Decay regularization.
 
-![Transformer Accuracy and Loss](figures/accuracy_plot-1.png)
-
+<p align="center">
+  <img src="figures/accuracy_plot-1.png" alt="Transformer Accuracy and Loss" width="400" />
+</p>
 
 ### WHEN are Transformers not Grokking?
 
 Our experiments on transformers showed that the ratio of the training dataset size to batch size plays a crucial role in determining whether grokking occurs. We found a specific region, dubbed the **comprehension band**, where grokking delays are shorter. This band is associated with a training dataset to batch size ratio consistently in the range of 100–800.
 
-![Comprehension Band](figures/Grokking_Delay_BS_DataSize_epoch-1.png)
+![Comprehension Band]()
 
+<p align="center">
+  <img src="figures/Grokking_Delay_BS_DataSize_epoch-1.png" alt="grokking" width="400" />
+</p>
 
 ### WHY are Transformers Grokking?
 
