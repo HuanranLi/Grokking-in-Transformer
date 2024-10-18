@@ -38,13 +38,6 @@ The project utilizes [Weights & Biases](https://wandb.ai/site) for experiment tr
 
 This project builds on recent research that explores the phenomenon of **Grokking**, where validation accuracy improves dramatically well after training accuracy has plateaued, especially in small dataset settings. The goal is to investigate when, why, and how grokking occurs, focusing on transformers and multi-layer perceptrons (MLPs) under various conditions.
 
-### WHAT is Grokking?
-
-Grokking is defined as the scenario when a model continues to improve on the validation set long after training accuracy has stabilized. It occurs particularly when the ratio of training to validation datasets is small.
-
-We measure the **grokking delay** as the number of epochs between the points at which training and validation accuracy both reach 95%.
-
-![Grokking Delay](figures/Grokking_Delay_BS_DataSize_epoch-1.png)
 
 ### Grokking on Transformers (Arithmetic Data)
 
@@ -52,11 +45,6 @@ We trained a **decoder-only transformer model** on arithmetic datasets, with ope
 
 ![Transformer Accuracy and Loss](figures/accuracy_plot-1.png)
 
-### Grokking on MLPs (MNIST)
-
-We replicated experiments using a **3-layer MLP** on the MNIST dataset, following prior work. The architecture used ReLU activations and trained with AdamH optimizer, using Mean-Square-Error (MSE) loss and Weight Decay regularization. We observed grokking even when using a small training set of 1,000 MNIST images.
-
-![MNIST Grokking](figures/MNIST_Grokking-1.png)
 
 ### WHEN are Transformers not Grokking?
 
@@ -64,11 +52,6 @@ Our experiments on transformers showed that the ratio of the training dataset si
 
 ![Comprehension Band](figures/Grokking_Delay_BS_DataSize_epoch-1.png)
 
-### WHEN are MLPs not Grokking?
-
-For MLPs, we found that modifying the loss function or adding data augmentation (e.g., random rotation, Gaussian blur) could completely eliminate grokking delays. This suggests that certain training conditions can prevent grokking even in settings where it would otherwise occur.
-
-![MLP Augmentation Impact](figures/MNIST_Grokking_Aug1-1.png)
 
 ### WHY are Transformers Grokking?
 
